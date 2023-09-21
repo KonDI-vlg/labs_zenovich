@@ -4,15 +4,18 @@
 #include <ctime> // содержит time()
 using namespace std;
 
-int main()
+void rand_arr(int n)
 {
     ofstream out;
     out.open("rand_arr.txt");
     srand(time(NULL));
-    for (int i = 0; i < 50 and out.is_open(); i++)
+    for (int i = 0; i < n and out.is_open(); i++)
     {
         out << rand() << endl;
     }
     out.close();
-    return 0;
+}
+
+int main()
+{
 }

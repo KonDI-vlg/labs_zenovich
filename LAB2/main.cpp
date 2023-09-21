@@ -1,91 +1,87 @@
-// C++ implementation of Radix Sort
-
 #include <iostream>
-using namespace std;
+#include <fstream>
 
-// A utility function to print an array
-void print(int arr[], int n)
+using namespace std;
+int maxNumber(int *arr, int n)
+{
+    int max = INT_MIN;
+    for (int i = 0; i < n; i++)
+    {
+        if (arr[i] > max)
+            max = arr[i];
+    }
+    int d = 0;
+    while (max > 0)
+    {
+        max /= 10;
+        d++;
+    }
+    return d;
+}
+
+void printArray(int *arr, int n)
 {
     for (int i = 0; i < n; i++)
-        cout << arr[i] << " ";
-}
-
-// A utility function to get maximum
-// value in arr[]
-int getMax(int arr[], int n)
-{
-    int mx = arr[0];
-    for (int i = 1; i < n; i++)
-        if (arr[i] > mx)
-            mx = arr[i];
-    return mx;
-}
-
-// A function to do counting sort of arr[]
-// according to the digit
-// represented by exp.
-void countSort(int arr[], int n, int exp)
-{
-
-    // Output array
-    int output[n];
-    int i, count[10] = {0};
-
-    // Store count of occurrences
-    // in count[]
-    for (i = 0; i < n; i++)
-        count[(arr[i] / exp) % 10]++;
-    print(count, 10);
-    cout << endl;
-
-    // Change count[i] so that count[i]
-    // now contains actual position
-    // of this digit in output[]
-    for (i = 1; i < 10; i++)
-        count[i] += count[i - 1];
-    print(count, 10);
-
-    // Build the output array
-    exit(1);
-    for (i = n - 1; i >= 0; i--)
     {
-        output[count[(arr[i] / exp) % 10] - 1] = arr[i];
-        count[(arr[i] / exp) % 10]--;
+        cout << arr[i] << ' ';
     }
-
-    // Copy the output array to arr[],
-    // so that arr[] now contains sorted
-    // numbers according to current digit
-    for (i = 0; i < n; i++)
-        arr[i] = output[i];
+    cout << endl;
 }
 
-// The main function to that sorts arr[]
-// of size n using Radix Sort
-void radixsort(int arr[], int n)
+void sortKarman(int *arr, int n, int m, int k)
 {
+    int *source = new int[n];
+    int *b = new int[m];
+    int j, x;
+    for (j = 1, x = 0; x < k; j *= 10, x++)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            source[i] = arr[i];
+        }
+        for (int i = 0; i < m; i++)
+        {
+            b[i] = 0;
+        }
+        for (int i = 0; i < n; i++)
+        {
+            b[(arr[i] / j) % 10]++;
+        }
 
-    // Find the maximum number to
-    // know number of digits
-    int m = getMax(arr, n);
+        int summNum = 0;
+        for (int i = 0; i < m; i++)
+        {
+            int tmp = b[i];
+            b[i] = summNum;
+            summNum += tmp;
+        }
 
-    // Do counting sort for every digit.
-    // Note that instead of passing digit
-    // number, exp is passed. exp is 10^i
-    // where i is current digit number
-    for (int exp = 1; m / exp > 0; exp *= 10)
-        countSort(arr, n, exp);
+        for (int i = 0; i < n; i++)
+        {
+            int c = source[i];
+            arr[b[c / j % 10]] = c;
+            b[(c / j) % 10]++;
+        }
+    }
 }
 
-// Driver Code
 int main()
 {
-    int arr[] = {543, 586, 517, 565, 529};
-    int n = sizeof(arr) / sizeof(arr[0]);
-    print(arr, n);
-    cout << endl;
-    // Function Call
-    radixsort(arr, n);
-    print(arr, n);
-    return 0;
+    ifstream in;
+    in.open("input.txt");
+    // ofstream fout("output.txt");
+    char N[256];
+    int k = 0;
+    int n = 50;
+    int *A = new int[50];
+    if (in.is_open())
+    {
+        while (in >> N)
+        {
+            A[k++] = stoi(N);
+        }
+        in.close();
+    }
+    sortKarman(A, n, 10, maxNumber(A, n));
+    printArray(A, n);
 }

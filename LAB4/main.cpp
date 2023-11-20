@@ -16,7 +16,7 @@ void printMatrix(vector<vector<double>> a)
   }
 }
 
-void sysout(vector<vector<double>> a, vector<double> y)
+void printSystem(vector<vector<double>> a, vector<double> y)
 {
   for (int i = 0; i < y.size(); i++)
   {
@@ -98,31 +98,42 @@ vector<double> gauss(vector<vector<double>> a, vector<double> y)
 }
 
 int main()
-{
+{ 
   ifstream in;
+  int matrix_size;
+  string matrix_element;
+
   in.open("input.txt");
-  int N;
-  string a_ij;
-  in >> N;
-  vector<vector<double>> a(N);
-  vector<double> y(N);
-  vector<double> x(N);
-  a.assign(N, vector<double>(N));
-  for (int i = 0; i < N; i++)
+  in >> matrix_size;
+  
+  vector<vector<double>> sourceMatrix(matrix_size);
+  vector<double> y(matrix_size);
+  vector<double> x(matrix_size);
+  
+  
+  
+  // Расширили матрицу
+  sourceMatrix.assign(matrix_size, vector<double>(matrix_size));
+
+  // Заполнили x-коэффициенты системы уравнений
+  for (int i = 0; i < matrix_size; i++)
   {
-    for (int j = 0; j < N; j++)
+    for (int j = 0; j < matrix_size; j++)
     {
-      in >> a_ij;
-      a[i][j] = stod(a_ij);
+      in >> matrix_element;
+      sourceMatrix[i][j] = stod(matrix_element);
     }
   }
-  for (int i = 0; i < N; i++)
-  {
-    in >> a_ij;
-    y[i] = stod(a_ij);
-  }
 
-  sysout(a, y);
-  x = gauss(a,y);
-  sysout(a,x);
+  // Заполнили y-значения системы уравнений
+  for (int i = 0; i < matrix_size; i++)
+  {
+    in >> matrix_element;
+    y[i] = stod(matrix_element);
+  }
+  // Вывели исходник
+  printSystem(sourceMatrix, y);
+  // Решили и вывели ответ
+  x = gauss(sourceMatrix,y);
+  printSystem(sourceMatrix,x);
 }

@@ -31,30 +31,29 @@ void printSystem(vector<vector<double>> a, vector<double> y)
   return;
 }
 
-vector<double> gauss(vector<vector<double>> a, vector<double> y)
+vector<double> gauss(vector<vector<double>> sourceMatrix, vector<double> matrix_y)
 {
-  int n = y.size();
-
-  vector<double> x(n);
   double max;
-  int k, index;
-  const double eps = 0.00001; // точность
-  k = 0;
+  int k = 0, index;
+  int n = matrix_y.size();
+
+  vector<double> x_ans(n);
+  
   while (k < n)
   {
-    // Поиск строки с максимальным a[i][k]
-    max = abs(a[k][k]);
+    // Поиск строки с максимальным sourceMatrix[i][k]
+    max = abs(sourceMatrix[k][k]);
     index = k;
     for (int i = k + 1; i < n; i++)
     {
-      if (abs(a[i][k]) > max)
+      if (abs(sourceMatrix[i][k]) > max)
       {
-        max = abs(a[i][k]);
+        max = abs(sourceMatrix[i][k]);
         index = i;
       }
     }
     // Перестановка строк
-    if (max < eps)
+    if (max <= 0)
     {
       // нет ненулевых диагональных элементов
       cout << "Решение получить невозможно из-за нулевого столбца ";
@@ -63,38 +62,38 @@ vector<double> gauss(vector<vector<double>> a, vector<double> y)
     }
     for (int j = 0; j < n; j++)
     {
-      double temp = a[k][j];
-      a[k][j] = a[index][j];
-      a[index][j] = temp;
+      double temp = sourceMatrix[k][j];
+      sourceMatrix[k][j] = sourceMatrix[index][j];
+      sourceMatrix[index][j] = temp;
     }
-    double temp = y[k];
-    y[k] = y[index];
-    y[index] = temp;
+    double temp = matrix_y[k];
+    matrix_y[k] = matrix_y[index];
+    matrix_y[index] = temp;
     // Нормализация уравнений
     for (int i = k; i < n; i++)
     {
-      double temp = a[i][k];
-      if (abs(temp) < eps)
+      double temp = sourceMatrix[i][k];
+      if (abs(temp) <= 0)
         continue; // для нулевого коэффициента пропустить
       for (int j = 0; j < n; j++)
-        a[i][j] = a[i][j] / temp;
-      y[i] = y[i] / temp;
+        sourceMatrix[i][j] = sourceMatrix[i][j] / temp;
+      matrix_y[i] = matrix_y[i] / temp;
       if (i == k)
         continue; // уравнение не вычитать само из себя
       for (int j = 0; j < n; j++)
-        a[i][j] = a[i][j] - a[k][j];
-      y[i] = y[i] - y[k];
+        sourceMatrix[i][j] = sourceMatrix[i][j] - sourceMatrix[k][j];
+      matrix_y[i] = matrix_y[i] - matrix_y[k];
     }
     k++;
   }
   // обратная подстановка
   for (k = n - 1; k >= 0; k--)
   {
-    x[k] = y[k];
+    x_ans[k] = matrix_y[k];
     for (int i = 0; i < k; i++)
-      y[i] = y[i] - a[i][k] * x[k];
+      matrix_y[i] = matrix_y[i] - sourceMatrix[i][k] * x_ans[k];
   }
-  return x;
+  return x_ans;
 }
 
 int main()
@@ -102,7 +101,7 @@ int main()
   ifstream in;
   int matrix_size;
   string matrix_element;
-
+  
   in.open("input.txt");
   in >> matrix_size;
   

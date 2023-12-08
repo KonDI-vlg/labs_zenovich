@@ -1,188 +1,244 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
-#include <iomanip>
-#include <cmath>
+#include <tuple>
 
 using namespace std;
 
-void printMatrix(vector<vector<double>> a)
-{
-  for (int i = 0; i < a[0].size(); i++)
-  {
-    for (int j = 0; j < a.size(); j++)
-    {
-      cout << a[i][j] << ' ';
+ifstream in;
+
+
+
+
+
+int rangMatrix(vector<vector<double>> x) {
+  int n = x.size();
+  int m = x[0].size();
+  int rang = 0;
+   int i = 0;
+   int j = 0;
+   vector<vector<double>> y = x;
+   while (i < n && j < m) {
+      int k = i;
+      while (k < n && y[k][j] == 0) {
+         k++;
+      }
+      if (k == n) {
+         j++;
+         continue;
+      }
+      if (k != i) {
+         for (int t = 0; t < m; t++) {
+            swap(y[i][t], y[k][t]);
+         }
+      }
+      for (int t = 0; t < n; t++) {
+         if (t == i) {
+            continue;
+         }
+         double c = y[t][j] / y[i][j];
+         for (int k = 0; k < m; k++) {
+            y[t][k] -= y[i][k] * c;
+         }
+      }
+      i++;
+      j++;
+      rang++;
+   }
+   return rang;
+}
+
+void printAnswer(vector<vector<double>> x, vector<double> y,int rang){
+  if ( rang < x[0].size()){
+    for(int i = 0; i < rang;i++){
+      string suff;
+      for(int j = 0; j < x[0].size();j++){
+        if(i != j and x[i][j] != 0)
+          suff.append(to_string(x[i][j] * (-1))).append("*x").append(to_string(j+1)).append(" ");
+      }
+      cout << "x" << i+1 << " = " << y[i] << ' ' << suff << endl;
     }
-    cout << endl;
+  }
+  else{
+    for (int i = 0; i < y.size(); i++)
+      cout << "x" << i + 1 << " = " << y[i] << endl;
   }
 }
 
-vector<vector<double>> zeroMatrix(int n, int m){
-    vector<vector<double>> a(n);
-    a.assign(n,vector<double>(m));
+vector<vector<double>> mergeMatrix(vector<vector<double>> x, vector<double> y){
+  int n = x.size();
+  int m = x[0].size();
+  
+  vector<vector<double>> k(n,vector<double>(m+1));
 
-    for(int i = 0; i < n; i++){
-        for(int j = 0; j < m; j++){
-            if(i==j)
-                a[i][j] = 1;
-            else
-                a[i][j] = 0;
-        }
-    }
-    return a;
+  for(int i = 0; i < n; i++){
+     for(int j = 0; j < m; j++){
+       k[i][j] = x[i][j];
+     }
+   }
+   for(int i = 0; i < n; i++){
+     k[i][m] = y[i];
+   }
+   return k;
+
 }
 
-void printSystem(vector<vector<double>> a, vector<double> y)
-{
-  for (int i = 0; i < y.size(); i++)
-  {
-    for (int j = 0; j < a[0].size(); j++)
-    {
-      cout << a[i][j] << "x" << j;
-      if (j < a[0].size() - 1)
-        cout << " + ";
-    }
-    cout << " = " << y[i] << endl;
-  }
-  return;
+void printSystemOfEquation(vector<vector<double>> x, vector<double> y){
+  int n = x.size();
+  int m = x[0].size();
+  for(int i = 0; i < n; i++){
+     for(int j = 0; j < m; j++){
+       cout << x[i][j] << "*x" << j + 1 << " ";
+     }
+     cout << "= " << y[i] << endl;
+   }
 }
 
-void printAnswer(vector<vector<double>> a, vector<double> y)
-{
-  if (a[0].size() != y.size()){
-    for(int i = 0; i < y.size();i++)
-      if ( y[i] == 0 ) break;
-  }
-  for (int i = 0; i < y.size(); i++)
-  {
-    string suff = "";
-    for (int j = 0; j < a[0].size(); j++)
-    {
-      if ( abs(a[i][j]) == 0 ) continue;
-      if (i == j) cout << a[i][j] << "x" << j;
-      if (j < a[0].size() - 1)
-        suff.append(" - ").append(to_string(round(a[i][j+1]))).append("x").append(to_string(j+1));
-    }
-    if (y[i] == 0) continue;
-    cout << " = " << y[i] << suff << endl;
-  }
-  return;
-}
-
-vector<double> gauss(vector<vector<double>> sourceMatrix, vector<double> matrix_y)
-{
-  double max;
+tuple<vector<vector<double>>,vector<double>> gaussMethod(vector<vector<double>> x, vector<double> y, bool infinity = false){
+  int n = x.size();
+  int m = x[0].size();
   int k = 0, index;
-  int n = matrix_y.size();
-  double eps = 0.001;
-  vector<double> x_ans(n);
+  double max;
+  
+  double eps = 0.0001;
 
-  while (k < n)
-  { 
-    // cout << "<---- Temp ---->" << endl;
-    // printSystem(sourceMatrix,matrix_y);
-    // Поиск строки с максимальным sourceMatrix[i][k]
-    max = abs(sourceMatrix[k][k]);
+  while ( k < rangMatrix(x) ) {
+    max = abs(x[k][k]);
     index = k;
-    for (int i = k + 1; i < n; i++)
-    {
-      if (abs(sourceMatrix[i][k]) > max)
-      {
-        max = abs(sourceMatrix[i][k]);
+
+    for( int i = k; i < n; i++){
+      if ( x[i][k] == 1 and x[index][k] != 1) {
         index = i;
       }
-    }
-    // Перестановка строк
-//    if (max < eps)
-//    {
-//      // нет ненулевых диагональных элементов
-//      cout << "Решение получить невозможно из-за нулевого столбца ";
-//      cout << index << " матрицы A" << endl;
-//      exit(1);
-//    }
-    for (int j = 0; j < n; j++)
-    {
-      double temp = sourceMatrix[k][j];
-      sourceMatrix[k][j] = sourceMatrix[index][j];
-      sourceMatrix[index][j] = temp;
-    }
-    double temp = matrix_y[k];
-    matrix_y[k] = matrix_y[index];
-    matrix_y[index] = temp;
-    // Нормализация уравнений
-    for (int i = k; i < n; i++)
-    {
-      double temp = sourceMatrix[i][k];
-      if (abs(temp) < eps)
-        continue; // для нулевого коэффициента пропустить
-      for (int j = 0; j < n; j++)
-        sourceMatrix[i][j] = abs(sourceMatrix[i][j] / temp) < eps ? 0 : sourceMatrix[i][j] / temp;
-      matrix_y[i] = abs(matrix_y[i] / temp) < eps ? 0 : matrix_y[i] / temp;
-      if (i == k)
-        continue; // уравнение не вычитать само из себя
-      for (int j = 0; j < n; j++)
-        sourceMatrix[i][j] = abs(sourceMatrix[i][j] - sourceMatrix[k][j]) < eps ? 0 : sourceMatrix[i][j] - sourceMatrix[k][j];
-      matrix_y[i] = abs(matrix_y[i] - matrix_y[k]) < eps ? 0 : matrix_y[i] - matrix_y[k];
-    }
-    k++;
-  }
-  // обратная подстановка
-  for (k = n - 1; k >= 0; k--)
-  {
-    x_ans[k] = abs(matrix_y[k]) < eps ? 0 : matrix_y[k];
-    for (int i = 0; i < k; i++){
-      matrix_y[i] = matrix_y[i] - sourceMatrix[i][k] * x_ans[k];
+      if ( abs(x[i][k]) > max ){
+        max = abs(x[i][k]);
       }
-  }
-  printAnswer(sourceMatrix,x_ans);
-  return x_ans;
-}
-
-int main()
-{
-  ifstream in;
-  int matrix_size_n, matrix_size_m;
-  string matrix_element;
-
-  in.open("input.txt");
-  in >> matrix_size_n;
-  in >> matrix_size_m;
-
-  vector<vector<double>> sourceMatrix(matrix_size_n);
-  vector<vector<double>> zero_m = zeroMatrix(matrix_size_n,matrix_size_m);
-  vector<double> y(matrix_size_n);
-  vector<double> x(matrix_size_n);
-
-
-
-  // Расширили матрицу
-  sourceMatrix.assign(matrix_size_n, vector<double>(matrix_size_m));
-
-  // Заполнили x-коэффициенты системы уравнений
-  for (int i = 0; i < matrix_size_n; i++)
-  {
-    for (int j = 0; j < matrix_size_m; j++)
-    {
-      in >> matrix_element;
-      sourceMatrix[i][j] = stod(matrix_element);
     }
+
+    if ( index != k) {
+      for( int j = 0; j < m; j++){
+       double temp = x[k][j];
+       x[k][j] = x[index][j];
+       x[index][j] = temp;
+      }
+      double temp = y[k];
+      y[k] = y[index];
+      y[index] = temp;
+    }
+    
+     for( int i = k; i < n; i++){
+       double temp = x[i][k];
+       if ( abs(temp) < eps ) continue;
+       for( int j = 0; j < m; j++){
+         x[i][j] = x[i][j] / temp;
+       }
+       y[i] = y[i] / temp;
+       if ( i == k ) continue;
+       for( int j = 0; j < m; j++){
+         x[i][j] = x[i][j] - x[k][j];
+       }
+       y[i] = y[i] - y[k];
+     }
+     k++;
+
   }
 
-  // Заполнили y-значения системы уравнений
-  for (int i = 0; i < matrix_size_n; i++)
-  {
-    in >> matrix_element;
-    y[i] = stod(matrix_element);
+
+  vector<double> ans(n);
+
+  if(infinity) {
+    cout << "Infinity: true" << endl;
+
+    
+    for(int i = n - 1; i >= 0; i--){
+      int cnt = 0;
+      ans[i] = y[i];
+      for(int j = 0; j < m; j++){
+        if(cnt == 1) {
+          cnt = 0;
+          break;
+        }
+        if( x[i][j] != 0) {
+          int row = i-1;
+          while(row >= 0){
+            int coef = x[row][j] / x[i][j];
+            x[row][j] -= x[i][j] * coef;
+            y[row] -= y[i] * coef;
+            row--;
+          }
+          cnt++;
+        }
+      }
+    }
+    printSystemOfEquation(x,ans);
   }
-  // Вывели исходник
-  cout << "<---- Source evaluation ---->" << endl;
-  printSystem(sourceMatrix, y);
+  else{
+    cout << "Infinity: false" << endl;
 
-  cout << "<---- Answer ---->" << endl;
-  // Решили и вывели ответ
-  x = gauss(sourceMatrix,y);
+    for(int i = n - 1; i >= 0; i--){
+      ans[i] = y[i];
+      for(int j = 0; j < i; j++){
+        y[j] = y[j] - x[j][i] * ans[i];
+      }
+    }
 
+    for(int k = n - 1; k >=0; k--){
+      for(int j = m - 1; j >= 0; j--){
+        for(int i = 0; i < k; i++){
+          x[i][j] -= x[k][j] * x[i][j];
+        }
+      }
+    }
+    printSystemOfEquation(x,y);
+  }
   
-  // printSystem(zero_m,x);
+  return make_tuple(x,ans);
 }
+
+// Main  
+int main(){
+  int n, m;
+  in.open("input.txt");
+  in >> n >> m;
+
+  vector<vector<double>> matrix_x(n, vector<double>(m));
+
+  for (int i = 0; i < n; i++)
+    for (int j = 0; j < m; j++)
+      in >> matrix_x[i][j];
+     
+  
+  vector<double> matrix_y(n);
+
+  for (int i = 0; i < n; i++)
+    in >> matrix_y[i];
+  
+  in.close();
+  
+
+  printSystemOfEquation(matrix_x,matrix_y);
+
+  if( rangMatrix( matrix_x ) != rangMatrix(mergeMatrix(matrix_x,matrix_y)) ){
+    cout << "System has no solution" << endl;
+  }
+  else if (rangMatrix( matrix_x ) < m){
+    vector<vector<double>> xasd;
+    vector<double> yasd;
+    tie(xasd,yasd) = gaussMethod(matrix_x,matrix_y,true);
+    cout << "Ans: " << endl;
+    printAnswer(xasd,yasd,rangMatrix(matrix_x));
+  }
+  else{
+    vector<vector<double>> xasd;
+    vector<double> yasd;
+    tie(xasd,yasd) = gaussMethod(matrix_x, matrix_y);
+    cout << "Ans: " << endl;
+    printAnswer(xasd,yasd,rangMatrix(matrix_x));
+  }
+  return 0;
+}
+
+
+
+
+// Возможна ошибка с переменной infinity
